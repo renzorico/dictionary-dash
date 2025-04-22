@@ -7,6 +7,7 @@
     input, button { padding: 10px; font-size: 1em; margin: 10px; width: 300px; }
     code { background-color: #f2f2f2; padding: 4px; display: block; margin: 20px auto; width: fit-content; white-space: pre-wrap; }
     #result { font-weight: bold; margin-top: 20px; font-size: 1.2em; }
+    footer { margin-top: 60px; font-size: 0.9em; color: #888; }
   </style>
 </head>
 <body>
@@ -18,46 +19,75 @@
   <button onclick="checkAnswer()">Check Answer</button>
   <button onclick="newChallenge()">Next Challenge</button>
   <div id="result"></div>
+  <footer>with love for the 2017 lisbon batch</footer>
 
   <script>
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function generateRandomValue(depth) {
+      const baseValues = ["apple", "red", "round", "dog", "Paris", "Spain", "French", "Nike", "shoes", 42, true, false, null];
+      if (depth > 0 && Math.random() < 0.3) return generateRandomDict(depth - 1);
+      if (depth > 0 && Math.random() < 0.3) {
+        const arr = [];
+        for (let i = 0; i < Math.floor(Math.random() * 3 + 2); i++) {
+          arr.push(generateRandomValue(depth - 1));
+        }
+        return arr;
+      }
+      return randomItem(baseValues);
+    }
+
     function generateRandomDict(depth = 1) {
       const keys = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size"];
-      const values = ["apple", "red", "round", "dog", "Paris", "Spain", "French", "Nike", "shoes", 42];
       const dict = {};
       const usedKeys = new Set();
       for (let i = 0; i < Math.floor(Math.random() * 3) + 3; i++) {
         let key;
         do {
-          key = keys[Math.floor(Math.random() * keys.length)];
+          key = randomItem(keys);
         } while (usedKeys.has(key));
         usedKeys.add(key);
-
-        const val = (depth > 1 && Math.random() > 0.3) ? generateRandomDict(depth - 1) : values[Math.floor(Math.random() * values.length)];
-        dict[key] = val;
+        dict[key] = generateRandomValue(depth);
       }
       return dict;
     }
 
-    function findTarget(dict, path = []) {
-      for (const key in dict) {
-        const val = dict[key];
-        if (typeof val !== "object") {
-          return { path: [...path, key], val };
+    function findTarget(obj, path = []) {
+      if (typeof obj !== 'object' || obj === null) return null;
+      if (Array.isArray(obj)) {
+        for (let i = 0; i < obj.length; i++) {
+          const nested = findTarget(obj[i], [...path, i]);
+          if (nested) return nested;
         }
-        const nested = findTarget(val, [...path, key]);
-        if (nested) return nested;
+      } else {
+        for (const key in obj) {
+          const val = obj[key];
+          if (typeof val !== 'object' || val === null) {
+            return { path: [...path, key], val };
+          }
+          const nested = findTarget(val, [...path, key]);
+          if (nested) return nested;
+        }
       }
     }
 
     let currentDict, expectedCode;
 
+    function pathToCode(path) {
+      return path.map(p => typeof p === 'number' ? `[${p}]` : `['${p}']`).join('');
+    }
+
     function newChallenge() {
       currentDict = generateRandomDict(3);
-      const { path, val } = findTarget(currentDict);
-      expectedCode = `dict_${path.map(k => `['${k}']`).join('')}`;
+      const target = findTarget(currentDict);
+      if (!target) return newChallenge();
+
+      expectedCode = `dict_${pathToCode(target.path)}`;
 
       document.getElementById("question").innerHTML =
-        `<code>dict_ : ${JSON.stringify(currentDict, null, 2)}</code><br><code>Get to the value '${val}'</code>`;
+        `<code>dict_ : ${JSON.stringify(currentDict, null, 2)}</code><br><code>Get to the value '${target.val}'</code>`;
       document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
     }
