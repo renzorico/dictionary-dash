@@ -1,54 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>🗝️ Dictionary Dash</title>
+  <title>Dictionary Access Game</title>
   <style>
     body { font-family: sans-serif; text-align: center; margin-top: 40px; }
-    button { margin: 10px; padding: 10px 20px; font-size: 1em; }
-    #result { margin-top: 20px; font-size: 1.2em; }
+    input, button { padding: 10px; font-size: 1em; margin: 10px; width: 300px; }
+    code { background-color: #f2f2f2; padding: 4px; display: block; margin: 20px auto; width: fit-content; }
+    #result { font-weight: bold; margin-top: 20px; font-size: 1.2em; }
   </style>
 </head>
 <body>
-  <h1>🗺️ Dictionary Dash</h1>
-  <p>Find the value for a given key in one of the dictionaries!</p>
-  <button onclick="generateChallenge()">New Challenge</button>
-  <div id="challenge"></div>
-  <input type="text" id="answer" placeholder="Your answer here" />
-  <button onclick="checkAnswer()">Check</button>
+  <h1>🔍 Access the Value</h1>
+  <p>Write the expression that accesses the target value from the dictionary</p>
+  <div id="question"></div>
+  <input id="input" type="text" placeholder="e.g., dict_['fruit']" />
+  <br>
+  <button onclick="checkAnswer()">Check Answer</button>
   <div id="result"></div>
 
   <script>
-    const dicts = [
-      { fruit: "apple", color: "red", shape: "round" },
-      { animal: "dog", sound: "bark", legs: 4 },
-      { city: "Barcelona", country: "Spain", language: "Catalan" },
-      { lang: "Python", type: "dynamic", level: "easy" }
+    const challenges = [
+      { dict: { fruit: "apple", color: "red", shape: "round" }, value: "apple" },
+      { dict: { animal: "cat", legs: 4, sound: "meow" }, value: 4 },
+      { dict: { city: "Paris", country: "France", language: "French" }, value: "French" },
+      { dict: { brand: "Nike", product: "shoes", size: 42 }, value: "shoes" },
     ];
 
-    let currentDict;
-    let currentKey;
+    let current;
 
-    function generateChallenge() {
-      const i = Math.floor(Math.random() * dicts.length);
-      currentDict = dicts[i];
-      const keys = Object.keys(currentDict);
-      currentKey = keys[Math.floor(Math.random() * keys.length)];
-
-      document.getElementById("challenge").textContent = 
-        `Dictionary: ${JSON.stringify(currentDict)}\nKey to find: "${currentKey}"`;
-      document.getElementById("answer").value = "";
+    function newChallenge() {
+      current = challenges[Math.floor(Math.random() * challenges.length)];
+      document.getElementById("question").innerHTML =
+        `<code>dict_ : ${JSON.stringify(current.dict)}</code><br><code>Get to the value '${current.value}'</code>`;
+      document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
     }
 
     function checkAnswer() {
-      const userAnswer = document.getElementById("answer").value;
-      const correct = currentDict[currentKey].toString();
-      const result = userAnswer === correct ? "✅ Correct!" : `❌ Nope. It was "${correct}"`;
-      document.getElementById("result").textContent = result;
+      const userCode = document.getElementById("input").value;
+      try {
+        const dict_ = current.dict;
+        const result = eval(userCode);
+        if (result === current.value) {
+          document.getElementById("result").textContent = "✅ Correct!";
+        } else {
+          document.getElementById("result").textContent = `❌ Incorrect. That gives '${result}'`;
+        }
+      } catch (e) {
+        document.getElementById("result").textContent = "⚠️ Error in your expression";
+      }
     }
 
-    // Auto-generate first challenge
-    generateChallenge();
+    newChallenge();
   </script>
 </body>
 </html>
