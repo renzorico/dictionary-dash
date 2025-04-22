@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>🗝️ Dictionary Dash</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; margin-top: 40px; }
+    button { margin: 10px; padding: 10px 20px; font-size: 1em; }
+    #result { margin-top: 20px; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Dictionary Dash</h1>
+  <p>Find the value for a given key in one of the dictionaries!</p>
+  <button onclick="generateChallenge()">New Challenge</button>
+  <div id="challenge"></div>
+  <input type="text" id="answer" placeholder="Your answer here" />
+  <button onclick="checkAnswer()">Check</button>
+  <div id="result"></div>
+
+  <script>
+    const dicts = [
+      { fruit: "apple", color: "red", shape: "round" },
+      { animal: "dog", sound: "bark", legs: 4 },
+      { city: "Barcelona", country: "Spain", language: "Catalan" },
+      { lang: "Python", type: "dynamic", level: "easy" }
+    ];
+
+    let currentDict;
+    let currentKey;
+
+    function generateChallenge() {
+      const i = Math.floor(Math.random() * dicts.length);
+      currentDict = dicts[i];
+      const keys = Object.keys(currentDict);
+      currentKey = keys[Math.floor(Math.random() * keys.length)];
+
+      document.getElementById("challenge").textContent = 
+        `Dictionary: ${JSON.stringify(currentDict)}\nKey to find: "${currentKey}"`;
+      document.getElementById("answer").value = "";
+      document.getElementById("result").textContent = "";
+    }
+
+    function checkAnswer() {
+      const userAnswer = document.getElementById("answer").value;
+      const correct = currentDict[currentKey].toString();
+      const result = userAnswer === correct ? "✅ Correct!" : `❌ Nope. It was "${correct}"`;
+      document.getElementById("result").textContent = result;
+    }
+
+    // Auto-generate first challenge
+    generateChallenge();
+  </script>
+</body>
+</html>
