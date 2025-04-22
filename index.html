@@ -1,43 +1,66 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Dictionary Access Game</title>
+  <title>Dictionary Game</title>
   <style>
     body { font-family: sans-serif; text-align: center; margin-top: 40px; display: flex; flex-direction: column; min-height: 100vh; }
     input, button { padding: 10px; font-size: 1em; margin: 10px; width: 300px; }
     code { background-color: #f2f2f2; padding: 8px; margin: 20px auto; width: 90%; text-align: left; display: block; white-space: pre-wrap; border-radius: 6px; }
     #result { font-weight: bold; margin-top: 20px; font-size: 1.2em; }
+    #target { font-weight: bold; font-size: 1.1em; margin-top: 10px; }
     footer { margin-top: auto; padding: 20px; font-size: 0.9em; color: #888; }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
   </style>
 </head>
 <body>
-  <h1>🔍 Access the Value</h1>
-  <p>Write the expression that accesses the target value from the dictionary</p>
-  <div id="question"></div>
-  <input id="input" type="text" placeholder="e.g., dict_['fruit']" />
-  <br>
-  <button onclick="checkAnswer()">Check Answer</button>
-  <button onclick="newChallenge()">Next Challenge</button>
-  <div id="result"></div>
-  <footer>with love for the 2017 lisbon batch</footer>
+  <main>
+    <h1>🔍 Access the hidden Value!</h1>
+    <p>Write the expression that accesses the target value from the dictionary</p>
+    <p>If you get to 100 correct answers and still don't understand how to work with dictionaries, we will give you the money back</p>
+    <div id="question"></div>
+    <div id="target"></div>
+    <input id="input" type="text" placeholder="e.g., dict['fruit']" />
+    <br>
+    <button onclick="checkAnswer()">Check Answer</button>
+    <button onclick="newChallenge()">Next Challenge</button>
+    <div id="result"></div>
+    <div id="counter">Correct answers: 0 / 100</div>
+
+    <footer>With love for the Lisbon #2017 Batch ♥️</footer>
+  </main>
 
   <script>
+    let correctCount = 0;
     function randomItem(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function generateRandomValue(depth) {
-      const baseValues = ["apple", "red", "round", "dog", "Paris", "Spain", "French", "Nike", "shoes", 42, true, false, null];
-      if (depth > 0 && Math.random() < 0.3) return generateRandomDict(depth - 1);
-      if (depth > 0 && Math.random() < 0.3) {
-        const arr = [];
-        for (let i = 0; i < Math.floor(Math.random() * 3 + 2); i++) {
-          arr.push(generateRandomValue(depth - 1));
-        }
-        return arr;
+    function generateRandomValue(depth, used = new Set()) {
+    const baseValues = ["apple", "red", "round", "dog", "Paris", "Spain", "French", "Nike", "shoes", 42, true, false, null];
+    if (depth > 0 && Math.random() < 0.3) return generateRandomDict(depth - 1, used);
+    if (depth > 0 && Math.random() < 0.3) {
+      const arr = [];
+      for (let i = 0; i < Math.floor(Math.random() * 3 + 2); i++) {
+        arr.push(generateRandomValue(depth - 1, used));
       }
-      return randomItem(baseValues);
+      return arr;
     }
+
+    let val;
+    const stringified = Array.from(used).map(v => JSON.stringify(v));
+    do {
+      val = randomItem(baseValues);
+    } while (stringified.includes(JSON.stringify(val)));
+    used.add(val);
+    return val;
+    }
+
 
     function generateRandomDict(depth = 1) {
       const allKeys = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size", "food", "drink", "weather", "vehicle"];
@@ -81,10 +104,11 @@
       const target = findTarget(currentDict);
       if (!target) return newChallenge();
 
-      expectedCode = `dict_${pathToCode(target.path)}`;
+      expectedCode = `dict${pathToCode(target.path)}`;
 
       document.getElementById("question").innerHTML =
-        `<code>dict_ = ${JSON.stringify(currentDict, null, 2)}</code><br><code>Get to the value '${target.val}'</code>`;
+        `<code>dict = ${JSON.stringify(currentDict, null, 2)}</code>`;
+      document.getElementById("target").innerHTML = `Get to the value: <span style="font-weight:bold;">${target.val}</span>`;
       document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
     }
@@ -92,11 +116,13 @@
     function checkAnswer() {
       const userCode = document.getElementById("input").value;
       try {
-        const dict_ = currentDict;
+        const dict = currentDict;
         const result = eval(userCode);
         const expected = eval(expectedCode);
         if (result === expected) {
           document.getElementById("result").textContent = "✅ Correct!";
+          correctCount++;
+          document.getElementById("counter").textContent = `Correct answers: ${correctCount} / 100`;
         } else {
           document.getElementById("result").textContent = `❌ Incorrect. That gives '${result}'`;
         }
