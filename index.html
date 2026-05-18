@@ -277,8 +277,8 @@
   </div>
 
   <script>
-    const KEYS = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size", "name", "type", "model", "team", "tool", "sport"];
-    const SCALARS = ["apple", "red", "round", "Paris", "Spain", "French", "Nike", "shoes", "London", "Python", "pandas", "blue", "circle", 42, 7, 100, 256];
+    const KEYS = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size", "name", "type", "model", "team", "tool", "sport", "weight", "height", "score", "rank"];
+    const SCALARS = ["apple", "red", "round", "Paris", "Spain", "French", "Nike", "shoes", "London", "Python", "pandas", "blue", "circle", "green", "square", "Rome", "Tokyo", "Java", "boots", "oval", 42, 7, 100, 256, 18, 99, 3];
 
     let currentDict, expectedCode, currentLevel = 1;
     let correct = 0, total = 0;
@@ -292,33 +292,59 @@
       return [...arr].sort(() => 0.5 - Math.random());
     }
 
-    function scalar(exclude = []) {
-      const ex = new Set(exclude.map(v => JSON.stringify(v)));
-      const pool = SCALARS.filter(v => !ex.has(JSON.stringify(v)));
-      return pick(pool.length ? pool : SCALARS);
+    // Returns a scalar not already used globally
+    function nextScalar(usedValues) {
+      const pool = SCALARS.filter(v => !usedValues.has(JSON.stringify(v)));
+      if (!pool.length) return pick(SCALARS); // fallback (shouldn't happen with enough pool)
+      const val = pick(pool);
+      usedValues.add(JSON.stringify(val));
+      return val;
     }
 
-    function flatDict() {
-      const keys = shuffled(KEYS).slice(0, 3 + Math.floor(Math.random() * 3));
+    // Returns a key not already used globally
+    function nextKey(usedKeys) {
+      const pool = KEYS.filter(k => !usedKeys.has(k));
+      if (!pool.length) return pick(KEYS);
+      const k = pick(pool);
+      usedKeys.add(k);
+      return k;
+    }
+
+    // Build a flat dict using global uniqueness sets
+    function buildFlatDict(size, usedKeys, usedValues) {
       const dict = {};
-      for (const k of keys) dict[k] = scalar(Object.values(dict));
+      for (let i = 0; i < size; i++) {
+        dict[nextKey(usedKeys)] = nextScalar(usedValues);
+      }
       return dict;
     }
 
+    function flatDict() {
+      const usedKeys = new Set();
+      const usedValues = new Set();
+      return buildFlatDict(3 + Math.floor(Math.random() * 3), usedKeys, usedValues);
+    }
+
     function nestedDict() {
-      const dict = flatDict();
-      const usedKeys = new Set(Object.keys(dict));
-      const nestedKey = pick(KEYS.filter(k => !usedKeys.has(k)));
-      dict[nestedKey] = flatDict();
+      const usedKeys = new Set();
+      const usedValues = new Set();
+      const dict = buildFlatDict(3, usedKeys, usedValues);
+      const nestedKey = nextKey(usedKeys);
+      dict[nestedKey] = buildFlatDict(3, usedKeys, usedValues);
       return dict;
     }
 
     function deepDict() {
-      const dict = nestedDict();
-      const usedKeys = new Set(Object.keys(dict));
-      const deepKey = pick(KEYS.filter(k => !usedKeys.has(k)));
-      const listKey = pick(KEYS.filter(k => k !== deepKey));
-      dict[deepKey] = { [listKey]: [scalar(), scalar(), scalar()] };
+      const usedKeys = new Set();
+      const usedValues = new Set();
+      const dict = buildFlatDict(2, usedKeys, usedValues);
+      // Add a nested dict with scalar values
+      const nestedKey = nextKey(usedKeys);
+      dict[nestedKey] = buildFlatDict(2, usedKeys, usedValues);
+      // Add a key whose value is a dict containing a list
+      const deepKey = nextKey(usedKeys);
+      const listKey = nextKey(usedKeys);
+      dict[deepKey] = { [listKey]: [nextScalar(usedValues), nextScalar(usedValues), nextScalar(usedValues)] };
       return dict;
     }
 
