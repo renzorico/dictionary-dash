@@ -1,135 +1,429 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Dictionary Game</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dictionary Dash</title>
   <style>
-    body { font-family: sans-serif; text-align: center; margin-top: 40px; display: flex; flex-direction: column; min-height: 100vh; }
-    input, button { padding: 10px; font-size: 1em; margin: 10px; width: 300px; }
-    code { background-color: #f2f2f2; padding: 8px; margin: 20px auto; width: 90%; text-align: left; display: block; white-space: pre-wrap; border-radius: 6px; }
-    #result { font-weight: bold; margin-top: 20px; font-size: 1.2em; }
-    #target { font-weight: bold; font-size: 1.1em; margin-top: 10px; }
-    footer { margin-top: auto; padding: 20px; font-size: 0.9em; color: #888; }
-    main {
-      flex: 1;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f1f5f9;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 660px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 8px;
+    }
+
+    header h1 {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1e293b;
+      letter-spacing: -0.5px;
+    }
+
+    header p {
+      color: #64748b;
+      margin-top: 6px;
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    /* Level selector */
+    .levels {
+      display: flex;
+      gap: 8px;
+    }
+
+    .level-btn {
+      flex: 1;
+      padding: 10px 8px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #64748b;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+
+    .level-btn:hover {
+      border-color: #818cf8;
+      color: #6366f1;
+    }
+
+    .level-btn.active {
+      background: #6366f1;
+      border-color: #6366f1;
+      color: white;
+    }
+
+    .level-btn strong {
+      display: block;
+      font-size: 0.78rem;
+      opacity: 0.8;
+      font-weight: 400;
+    }
+
+    /* Score row */
+    .score-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .score-label {
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+
+    .score-count {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1e293b;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Code block */
+    .code-block {
+      background: #1e1e2e;
+      color: #cdd6f4;
+      border-radius: 10px;
+      padding: 18px 20px;
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 0.875rem;
+      line-height: 1.65;
+      overflow-x: auto;
+      white-space: pre;
+      margin-bottom: 16px;
+    }
+
+    /* Target */
+    .target-area {
+      text-align: center;
+      padding: 14px;
+      background: #f8fafc;
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+
+    .target-label {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .target-value {
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-weight: 700;
+      font-size: 1.4rem;
+      color: #6366f1;
+    }
+
+    /* Input row */
+    .input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .answer-input {
+      flex: 1;
+      padding: 11px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Menlo', 'Monaco', 'Consolas', monospace;
+      font-size: 0.9rem;
+      color: #1e293b;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .answer-input:focus {
+      border-color: #6366f1;
+    }
+
+    .btn-check {
+      padding: 11px 22px;
+      background: #6366f1;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-check:hover { background: #4f46e5; }
+
+    /* Feedback */
+    .feedback {
+      min-height: 38px;
+      display: flex;
+      align-items: center;
       justify-content: center;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      padding: 0 12px;
+    }
+
+    .feedback.correct { background: #dcfce7; color: #15803d; }
+    .feedback.incorrect { background: #fee2e2; color: #dc2626; }
+    .feedback.error { background: #fef9c3; color: #b45309; }
+
+    /* Next button */
+    .btn-next {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-next:hover {
+      border-color: #94a3b8;
+      color: #1e293b;
+    }
+
+    footer {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      margin-top: 8px;
     }
   </style>
 </head>
 <body>
-  <main>
-    <h1>🔍 Access the hidden Value!</h1>
-    <p>Write the expression that accesses the target value from the dictionary</p>
-    <p>If you get to 100 correct answers and still don't understand how to work with dictionaries, we will give you the money back ;)</p>
-    <div id="question"></div>
-    <div id="target"></div>
-    <input id="input" type="text" placeholder="e.g., dict['fruit']" />
-    <br>
-    <button onclick="checkAnswer()">Check Answer</button>
-    <button onclick="newChallenge()">Next Challenge</button>
-    <div id="result"></div>
-    <div id="counter">Correct answers: 0 / 100</div>
+  <div class="container">
+    <header>
+      <h1>Dictionary Dash</h1>
+      <p>Write the Python expression that returns the highlighted value.</p>
+    </header>
 
-    <footer>With love for Data Science students in LW♥️</footer>
-  </main>
+    <div class="card">
+      <div class="levels">
+        <button class="level-btn active" onclick="setLevel(1)">
+          Level 1
+          <strong>Flat dict</strong>
+        </button>
+        <button class="level-btn" onclick="setLevel(2)">
+          Level 2
+          <strong>Nested dict</strong>
+        </button>
+        <button class="level-btn" onclick="setLevel(3)">
+          Level 3
+          <strong>Dict + list</strong>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="score-row">
+        <span class="score-label">Correct answers</span>
+        <span class="score-count" id="score">0 / 0</span>
+      </div>
+
+      <div class="code-block" id="code-block"></div>
+
+      <div class="target-area">
+        <div class="target-label">Find this value:</div>
+        <div class="target-value" id="target-value"></div>
+      </div>
+
+      <div class="input-row">
+        <input class="answer-input" id="answer" type="text" placeholder="dict['key']" autocomplete="off" spellcheck="false" />
+        <button class="btn-check" onclick="checkAnswer()">Check</button>
+      </div>
+
+      <div class="feedback" id="feedback"></div>
+
+      <button class="btn-next" onclick="newChallenge()">Skip / Next challenge</button>
+    </div>
+
+    <footer>With love for Data Science students in LW</footer>
+  </div>
 
   <script>
-    let correctCount = 0;
-    function randomItem(arr) {
+    const KEYS = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size", "name", "type", "model", "team", "tool", "sport"];
+    const SCALARS = ["apple", "red", "round", "Paris", "Spain", "French", "Nike", "shoes", "London", "Python", "pandas", "blue", "circle", 42, 7, 100, 256];
+
+    let currentDict, expectedCode, currentLevel = 1;
+    let correct = 0, total = 0;
+    let autoAdvanceTimer = null;
+
+    function pick(arr) {
       return arr[Math.floor(Math.random() * arr.length)];
     }
 
-    function generateRandomValue(depth, used = new Set()) {
-    const baseValues = ["apple", "red", "round", "dog", "Paris", "Spain", "French", "Nike", "shoes", 42, true, false, null];
-    if (depth > 0 && Math.random() < 0.3) return generateRandomDict(depth - 1, used);
-    if (depth > 0 && Math.random() < 0.3) {
-      const arr = [];
-      for (let i = 0; i < Math.floor(Math.random() * 3 + 2); i++) {
-        arr.push(generateRandomValue(depth - 1, used));
-      }
-      return arr;
+    function shuffled(arr) {
+      return [...arr].sort(() => 0.5 - Math.random());
     }
 
-    let val;
-    const stringified = Array.from(used).map(v => JSON.stringify(v));
-    do {
-      val = randomItem(baseValues);
-    } while (stringified.includes(JSON.stringify(val)));
-    used.add(val);
-    return val;
+    function scalar(exclude = []) {
+      const ex = new Set(exclude.map(v => JSON.stringify(v)));
+      const pool = SCALARS.filter(v => !ex.has(JSON.stringify(v)));
+      return pick(pool.length ? pool : SCALARS);
     }
 
-
-    function generateRandomDict(depth = 1) {
-      const allKeys = ["fruit", "color", "shape", "animal", "city", "country", "language", "brand", "product", "size", "food", "drink", "weather", "vehicle"];
-      const shuffledKeys = allKeys.sort(() => 0.5 - Math.random());
+    function flatDict() {
+      const keys = shuffled(KEYS).slice(0, 3 + Math.floor(Math.random() * 3));
       const dict = {};
-      const numKeys = Math.floor(Math.random() * 3) + 3;
-      for (let i = 0; i < numKeys; i++) {
-        const key = shuffledKeys[i];
-        dict[key] = generateRandomValue(depth);
-      }
+      for (const k of keys) dict[k] = scalar(Object.values(dict));
       return dict;
     }
 
-    function findTarget(obj, path = []) {
-      if (typeof obj !== 'object' || obj === null) return null;
-      if (Array.isArray(obj)) {
-        for (let i = 0; i < obj.length; i++) {
-          const nested = findTarget(obj[i], [...path, i]);
-          if (nested) return nested;
-        }
-      } else {
-        for (const key in obj) {
-          const val = obj[key];
-          if (typeof val !== 'object' || val === null) {
-            return { path: [...path, key], val };
-          }
-          const nested = findTarget(val, [...path, key]);
-          if (nested) return nested;
-        }
-      }
+    function nestedDict() {
+      const dict = flatDict();
+      const usedKeys = new Set(Object.keys(dict));
+      const nestedKey = pick(KEYS.filter(k => !usedKeys.has(k)));
+      dict[nestedKey] = flatDict();
+      return dict;
     }
 
-    let currentDict, expectedCode;
+    function deepDict() {
+      const dict = nestedDict();
+      const usedKeys = new Set(Object.keys(dict));
+      const deepKey = pick(KEYS.filter(k => !usedKeys.has(k)));
+      const listKey = pick(KEYS.filter(k => k !== deepKey));
+      dict[deepKey] = { [listKey]: [scalar(), scalar(), scalar()] };
+      return dict;
+    }
+
+    function allPaths(obj, path = []) {
+      if (typeof obj !== "object" || obj === null) return [{ path, val: obj }];
+      if (Array.isArray(obj)) return obj.flatMap((v, i) => allPaths(v, [...path, i]));
+      return Object.entries(obj).flatMap(([k, v]) => allPaths(v, [...path, k]));
+    }
 
     function pathToCode(path) {
-      return path.map(p => typeof p === 'number' ? `[${p}]` : `['${p}']`).join('');
+      return "dict" + path.map(p => typeof p === "number" ? `[${p}]` : `['${p}']`).join("");
+    }
+
+    function toPython(val, indent = 0) {
+      const pad = "    ".repeat(indent);
+      const inner = "    ".repeat(indent + 1);
+      if (val === null) return "None";
+      if (val === true) return "True";
+      if (val === false) return "False";
+      if (typeof val === "string") return `'${val}'`;
+      if (typeof val === "number") return String(val);
+      if (Array.isArray(val)) {
+        if (!val.length) return "[]";
+        return `[\n${val.map(v => inner + toPython(v, indent + 1)).join(",\n")}\n${pad}]`;
+      }
+      if (typeof val === "object") {
+        const entries = Object.entries(val);
+        if (!entries.length) return "{}";
+        return `{\n${entries.map(([k, v]) => `${inner}'${k}': ${toPython(v, indent + 1)}`).join(",\n")}\n${pad}}`;
+      }
+      return String(val);
+    }
+
+    function setLevel(n) {
+      currentLevel = n;
+      document.querySelectorAll(".level-btn").forEach((b, i) => {
+        b.classList.toggle("active", i + 1 === n);
+      });
+      newChallenge();
     }
 
     function newChallenge() {
-      currentDict = generateRandomDict(3);
-      const target = findTarget(currentDict);
-      if (!target) return newChallenge();
+      if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
 
-      expectedCode = `dict${pathToCode(target.path)}`;
+      if (currentLevel === 1) currentDict = flatDict();
+      else if (currentLevel === 2) currentDict = nestedDict();
+      else currentDict = deepDict();
 
-      document.getElementById("question").innerHTML =
-        `<code>dict = ${JSON.stringify(currentDict, null, 2)}</code>`;
-      document.getElementById("target").innerHTML = `Get to the value: <span style="font-weight:bold;">${target.val}</span>`;
-      document.getElementById("input").value = "";
-      document.getElementById("result").textContent = "";
+      const paths = allPaths(currentDict);
+
+      let candidates;
+      if (currentLevel === 1) {
+        candidates = paths.filter(p => p.path.length === 1);
+      } else if (currentLevel === 2) {
+        candidates = paths.filter(p => p.path.length === 2 && typeof p.path[0] === "string" && typeof p.path[1] === "string");
+      } else {
+        candidates = paths.filter(p => p.path.some(s => typeof s === "number"));
+      }
+      if (!candidates.length) candidates = paths;
+
+      const target = pick(candidates);
+      expectedCode = pathToCode(target.path);
+
+      document.getElementById("code-block").textContent = `dict = ${toPython(currentDict)}`;
+      document.getElementById("target-value").textContent = toPython(target.val);
+      document.getElementById("answer").value = "";
+      setFeedback("", "");
+      document.getElementById("answer").focus();
+    }
+
+    function setFeedback(text, type) {
+      const el = document.getElementById("feedback");
+      el.textContent = text;
+      el.className = "feedback" + (type ? ` ${type}` : "");
     }
 
     function checkAnswer() {
-      const userCode = document.getElementById("input").value;
+      const userInput = document.getElementById("answer").value.trim();
+      if (!userInput) return;
+      total++;
+      document.getElementById("score").textContent = `${correct} / ${total}`;
+
       try {
         const dict = currentDict;
-        const result = eval(userCode);
+        // Accept both single and double quotes
+        const normalized = userInput.replace(/"/g, "'");
+        const result = eval(normalized);
         const expected = eval(expectedCode);
+
         if (result === expected) {
-          document.getElementById("result").textContent = "✅ Correct!";
-          correctCount++;
-          document.getElementById("counter").textContent = `Correct answers: ${correctCount} / 100`;
+          correct++;
+          document.getElementById("score").textContent = `${correct} / ${total}`;
+          setFeedback("Correct!", "correct");
+          autoAdvanceTimer = setTimeout(newChallenge, 1000);
         } else {
-          document.getElementById("result").textContent = `❌ Incorrect. That gives '${result}'`;
+          setFeedback(`Not quite — that gives ${toPython(result)}`, "incorrect");
         }
       } catch (e) {
-        document.getElementById("result").textContent = "⚠️ Error in your expression";
+        setFeedback("Expression error — check your syntax", "error");
       }
     }
+
+    document.getElementById("answer").addEventListener("keydown", e => {
+      if (e.key === "Enter") checkAnswer();
+    });
 
     newChallenge();
   </script>
