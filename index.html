@@ -322,29 +322,41 @@
     function flatDict() {
       const usedKeys = new Set();
       const usedValues = new Set();
-      return buildFlatDict(3 + Math.floor(Math.random() * 3), usedKeys, usedValues);
+      return buildFlatDict(5 + Math.floor(Math.random() * 3), usedKeys, usedValues);
     }
 
     function nestedDict() {
       const usedKeys = new Set();
       const usedValues = new Set();
-      const dict = buildFlatDict(3, usedKeys, usedValues);
-      const nestedKey = nextKey(usedKeys);
-      dict[nestedKey] = buildFlatDict(3, usedKeys, usedValues);
+      // 2 top-level scalars + 2 nested dicts with 3 keys each
+      const dict = buildFlatDict(2, usedKeys, usedValues);
+      const k1 = nextKey(usedKeys);
+      dict[k1] = buildFlatDict(3, usedKeys, usedValues);
+      const k2 = nextKey(usedKeys);
+      dict[k2] = buildFlatDict(3, usedKeys, usedValues);
       return dict;
     }
 
     function deepDict() {
       const usedKeys = new Set();
       const usedValues = new Set();
-      const dict = buildFlatDict(2, usedKeys, usedValues);
-      // Add a nested dict with scalar values
-      const nestedKey = nextKey(usedKeys);
-      dict[nestedKey] = buildFlatDict(2, usedKeys, usedValues);
-      // Add a key whose value is a dict containing a list
-      const deepKey = nextKey(usedKeys);
-      const listKey = nextKey(usedKeys);
-      dict[deepKey] = { [listKey]: [nextScalar(usedValues), nextScalar(usedValues), nextScalar(usedValues)] };
+      // 1 top-level scalar
+      const dict = buildFlatDict(1, usedKeys, usedValues);
+
+      // Branch 1: dict -> dict -> scalars (depth 3 via string keys)
+      //           dict -> list  (depth 3 via index)
+      const k1 = nextKey(usedKeys);
+      const inner1 = buildFlatDict(1, usedKeys, usedValues);
+      inner1[nextKey(usedKeys)] = buildFlatDict(2, usedKeys, usedValues);
+      inner1[nextKey(usedKeys)] = [nextScalar(usedValues), nextScalar(usedValues), nextScalar(usedValues)];
+      dict[k1] = inner1;
+
+      // Branch 2: dict -> dict -> scalars (another depth-3 string path)
+      const k2 = nextKey(usedKeys);
+      const inner2 = buildFlatDict(1, usedKeys, usedValues);
+      inner2[nextKey(usedKeys)] = buildFlatDict(2, usedKeys, usedValues);
+      dict[k2] = inner2;
+
       return dict;
     }
 
@@ -399,9 +411,9 @@
       if (currentLevel === 1) {
         candidates = paths.filter(p => p.path.length === 1);
       } else if (currentLevel === 2) {
-        candidates = paths.filter(p => p.path.length === 2 && typeof p.path[0] === "string" && typeof p.path[1] === "string");
+        candidates = paths.filter(p => p.path.length === 2);
       } else {
-        candidates = paths.filter(p => p.path.some(s => typeof s === "number"));
+        candidates = paths.filter(p => p.path.length >= 3);
       }
       if (!candidates.length) candidates = paths;
 
